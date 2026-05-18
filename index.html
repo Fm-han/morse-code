@@ -1,119 +1,179 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>鎽╂柉鐢电爜杞崲鍣?/title>
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{background:#fafafa;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;padding:20px;min-height:100vh}
-.container{max-width:700px;margin:0 auto}
-h1{text-align:center;color:#333;margin-bottom:24px;font-size:22px}
-.card{background:#fff;border:1px solid #e0e0e0;border-radius:8px;padding:24px;margin-bottom:16px}
-label{display:block;font-weight:600;margin-bottom:6px;color:#555;font-size:14px}
-textarea{width:100%;padding:10px;border:1px solid #ddd;border-radius:4px;font-size:14px;box-sizing:border-box;resize:vertical;font-family:monospace}
-.btn{background:#007bff;color:#fff;border:none;padding:8px 20px;border-radius:4px;cursor:pointer;font-size:14px;margin-top:8px}
-.btn:hover{background:#0056b3}
-.btn-green{background:#28a745}
-.btn-green:hover{background:#218838}
-.result{background:#f5f5f5;padding:12px;border-radius:4px;font-family:monospace;font-size:14px;margin-top:12px;min-height:60px;word-break:break-all;white-space:pre-wrap}
-.actions{display:flex;gap:8px;margin-top:12px}
-.mode-row{display:flex;gap:8px;margin-bottom:16px}
-.mode-btn{padding:8px 16px;border:1px solid #ddd;background:#f9f9f9;border-radius:4px;cursor:pointer;font-size:14px}
-.mode-btn.active{background:#007bff;color:#fff;border-color:#007bff}
-.ref{font-size:12px;color:#888;margin-top:16px;line-height:1.6;max-height:200px;overflow-y:auto}
-.ref span{font-family:monospace;background:#f0f0f0;padding:1px 4px;border-radius:2px}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>摩斯电码转换器</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #fafafa; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        h1 { font-size: 1.25rem; font-weight: 600; margin-bottom: 16px; color: #333; }
+        .card { background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 24px; margin-bottom: 16px; }
+        .form-group { margin-bottom: 16px; }
+        label { display: block; margin-bottom: 8px; color: #333; font-weight: 500; }
+        textarea { width: 100%; min-height: 120px; padding: 12px; border: 1px solid #ddd; border-radius: 4px; font-family: monospace; font-size: 16px; resize: vertical; }
+        .btn { padding: 8px 20px; border-radius: 4px; cursor: pointer; border: none; font-size: 14px; margin-right: 8px; }
+        .btn-blue { background: #007bff; color: #fff; }
+        .btn-green { background: #28a745; color: #fff; }
+        .btn-gray { background: #6c757d; color: #fff; }
+        .output { background: #f5f5f5; padding: 16px; border-radius: 4px; font-family: monospace; font-size: 16px; min-height: 80px; word-break: break-all; }
+        .visual { font-size: 2rem; letter-spacing: 4px; text-align: center; padding: 20px; background: #1a1a2e; color: #fff; border-radius: 8px; margin-top: 16px; }
+        .visual .dot { color: #ffd700; }
+        .visual .dash { color: #00ff00; }
+        .controls { display: flex; gap: 8px; margin-top: 16px; }
+        .morse-ref { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; margin-top: 16px; font-size: 13px; }
+        .ref-item { background: #f5f5f5; padding: 8px; border-radius: 4px; display: flex; justify-content: space-between; }
+        .ref-char { font-weight: 600; }
+        .ref-code { font-family: monospace; color: #007bff; }
+    </style>
 </head>
 <body>
-<div class="container">
-<h1>鎽╂柉鐢电爜杞崲鍣?/h1>
-<div class="card">
-<div class="mode-row">
-<div class="mode-btn active" onclick="setMode('text')">鏂囧瓧 鈫?鎽╂柉鐢电爜</div>
-<div class="mode-btn" onclick="setMode('morse')">鎽╂柉鐢电爜 鈫?鏂囧瓧</div>
-</div>
-<label id="inputLabel">杈撳叆鏂囧瓧</label>
-<textarea id="input" rows="4" placeholder="杈撳叆瑕佽浆鎹㈢殑鏂囧瓧..."></textarea>
-<button class="btn" onclick="convert()">杞崲</button>
-<div class="result" id="output"></div>
-<div class="actions">
-<button class="btn btn-green" onclick="copyResult()">澶嶅埗缁撴灉</button>
-<button class="btn" onclick="playMorse()" id="playBtn" style="display:none">鎾斁鎽╂柉鐢电爜</button>
-</div>
-</div>
-<div class="card">
-<label>鍙傝€冭〃</label>
-<div class="ref" id="ref"></div>
-</div>
-</div>
-<script>
-const morseMap={
-'A':'.-','B':'-...','C':'-.-.','D':'-..','E':'.','F':'..-.','G':'--.','H':'....','I':'..',
-'J':'.---','K':'-.-','L':'.-..','M':'--','N':'-.','O':'---','P':'.--.','Q':'--.-','R':'.-.',
-'S':'...','T':'-','U':'..-','V':'...-','W':'.--','X':'-..-','Y':'-.--','Z':'--..',
-'0':'-----','1':'.----','2':'..---','3':'...--','4':'....-','5':'.....','6':'-....',
-'7':'--...','8':'---..','9':'----.',  '.':'.-.-.-',',':'--..--','?':'..--..','!':'-.-.--',
-'/':'-..-.','(':'-.--.',')':'-.--.-','&':'.-...',':':'---...', ';':'-.-.-.','=':'-...-',
-'+':'.-.-.','-':'-....-','_':'..--.-','"':'.-..-.','@':'.--.-.','\'':'.----.'};
-const reverseMorse={};Object.entries(morseMap).forEach(([k,v])=>reverseMorse[v]=k);
-let mode='text';
-function setMode(m){
-mode=m;
-document.querySelectorAll('.mode-btn').forEach((b,i)=>b.classList.toggle('active',i===(m==='text'?0:1)));
-document.getElementById('inputLabel').textContent=m==='text'?'杈撳叆鏂囧瓧':'杈撳叆鎽╂柉鐢电爜锛堢敤绌烘牸鍒嗛殧锛?;
-document.getElementById('input').placeholder=m==='text'?'杈撳叆瑕佽浆鎹㈢殑鏂囧瓧...':'渚嬪: .... . .-.. .-.. ---';
-document.getElementById('playBtn').style.display=m==='text'?'none':'inline-block';
-}
-function convert(){
-const input=document.getElementById('input').value;
-if(mode==='text'){
-const result=input.toUpperCase().split('').map(c=>morseMap[c]||c).join(' ');
-document.getElementById('output').textContent=result;
-document.getElementById('playBtn').style.display=input.trim()?'inline-block':'none';
-}else{
-const words=input.trim().split(' / ');
-const result=words.map(w=>w.trim().split(' ').map(c=>reverseMorse[c]||c).join('')).join(' ');
-document.getElementById('output').textContent=result;
-}
-}
-function copyResult(){
-navigator.clipboard.writeText(document.getElementById('output').textContent);
-alert('宸插鍒跺埌鍓创鏉?');
-}
-let audioCtx;
-function playMorse(){
-const morse=document.getElementById('output').textContent;
-if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();
-const symbols=[...morse];
-let time=audioCtx.currentTime+0.05;
-const dotDur=0.08;
-symbols.forEach(s=>{
-if(s==='.'){
-const o=audioCtx.createOscillator();const g=audioCtx.createGain();
-o.connect(g);g.connect(audioCtx.destination);o.frequency.value=700;
-g.gain.setValueAtTime(0.3,time);g.gain.setValueAtTime(0,time+dotDur);
-o.start(time);o.stop(time+dotDur);time+=dotDur+dotDur;
-}else if(s==='-'){
-const o=audioCtx.createOscillator();const g=audioCtx.createGain();
-o.connect(g);g.connect(audioCtx.destination);o.frequency.value=700;
-g.gain.setValueAtTime(0.3,time);g.gain.setValueAtTime(0,time+dotDur*3);
-o.start(time);o.stop(time+dotDur*3);time+=dotDur*3+dotDur;
-}else if(s===' '){time+=dotDur*2}
-});
-}
-const ref=document.getElementById('ref');
-const entries=Object.entries(morseMap);
-let html='<table style="width:100%;border-collapse:collapse">';
-for(let i=0;i<entries.length;i+=6){
-html+='<tr>';
-for(let j=i;j<Math.min(i+6,entries.length);j++){
-html+=`<td style="padding:2px 6px"><span>${entries[j][0]}</span> <span>${entries[j][1]}</span></td>`;
-}
-html+='</tr>';
-}
-html+='</table>';
-ref.innerHTML=html;
-</script>
+    <div class="container">
+        <h1>摩斯电码转换器</h1>
+        <div class="card">
+            <div class="form-group">
+                <label>输入文字</label>
+                <textarea id="textInput" placeholder="输入要转换的文字...">SOS</textarea>
+            </div>
+            <div class="controls">
+                <button class="btn btn-blue" onclick="textToMorse()">转换为摩斯码</button>
+                <button class="btn btn-blue" onclick="playMorse()">🔊 播放声音</button>
+            </div>
+        </div>
+        <div class="card">
+            <div class="form-group">
+                <label>输入摩斯码 (用空格分隔，点为 . 横为 -)</label>
+                <textarea id="morseInput" placeholder="... --- ..."></textarea>
+            </div>
+            <div class="controls">
+                <button class="btn btn-blue" onclick="morseToText()">转换为文字</button>
+            </div>
+        </div>
+        <div class="card">
+            <label>摩斯电码</label>
+            <div class="output" id="morseOutput"></div>
+            <div class="visual" id="visual"></div>
+        </div>
+        <div class="card">
+            <label>解码结果</label>
+            <div class="output" id="textOutput"></div>
+        </div>
+        <div class="card">
+            <label>摩斯电码参考表</label>
+            <div class="morse-ref" id="ref"></div>
+        </div>
+    </div>
+    <script>
+        const morseCode = {
+            'A': '.-', 'B': '-...', 'C': '-.-.', 'D': '-..', 'E': '.', 'F': '..-.', 'G': '--.', 'H': '....',
+            'I': '..', 'J': '.---', 'K': '-.-', 'L': '.-..', 'M': '--', 'N': '-.', 'O': '---', 'P': '.--.',
+            'Q': '--.-', 'R': '.-.', 'S': '...', 'T': '-', 'U': '..-', 'V': '...-', 'W': '.--', 'X': '-..-',
+            'Y': '-.--', 'Z': '--..', '0': '-----', '1': '.----', '2': '..---', '3': '...--', '4': '....-',
+            '5': '.....', '6': '-....', '7': '--...', '8': '---..', '9': '----.', '.': '.-.-.-', ',': '--..--',
+            '?': '..--..', "'": '.----.', '!': '-.-.--', '/': '-..-.', '(': '-.--.', ')': '-.--.-', '&': '.-...',
+            ':': '---...', ';': '-.-.-.', '=': '-...-', '+': '.-.-.', '-': '-....-', '_': '..--.-', '"': '.-..-.',
+            '$': '...-..-', '@': '.--.-.'
+        };
+        
+        const reverseMorse = Object.fromEntries(Object.entries(morseCode).map(([k, v]) => [v, k]));
+        
+        function textToMorse() {
+            const text = document.getElementById('textInput').value.toUpperCase();
+            let morse = [];
+            for (const char of text) {
+                if (char === ' ') {
+                    morse.push('/');
+                } else if (morseCode[char]) {
+                    morse.push(morseCode[char]);
+                }
+            }
+            const morseStr = morse.join(' ');
+            document.getElementById('morseOutput').textContent = morseStr;
+            
+            // Visual representation
+            let visual = '';
+            for (const m of morse) {
+                if (m === '/') {
+                    visual += '  /  ';
+                } else {
+                    for (const c of m) {
+                        visual += c === '.' ? '<span class="dot">●</span>' : '<span class="dash">━━</span>';
+                    }
+                    visual += ' ';
+                }
+            }
+            document.getElementById('visual').innerHTML = visual;
+        }
+        
+        function morseToText() {
+            const morse = document.getElementById('morseInput').value;
+            const parts = morse.split(' ');
+            let text = '';
+            for (const part of parts) {
+                if (part === '') continue;
+                if (part === '/') {
+                    text += ' ';
+                } else if (reverseMorse[part]) {
+                    text += reverseMorse[part];
+                }
+            }
+            document.getElementById('textOutput').textContent = text;
+        }
+        
+        function playMorse() {
+            const morse = document.getElementById('morseOutput').textContent;
+            if (!morse) {
+                textToMorse();
+            }
+            
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const dot = 150;
+            const dash = dot * 3;
+            const symbolGap = dot;
+            const letterGap = dot * 3;
+            const wordGap = dot * 7;
+            
+            let time = ctx.currentTime;
+            
+            for (const char of morse) {
+                if (char === '.') {
+                    playTone(ctx, time, dot);
+                    time += dot + symbolGap;
+                } else if (char === '-') {
+                    playTone(ctx, time, dash);
+                    time += dash + symbolGap;
+                } else if (char === ' ') {
+                    time += letterGap - symbolGap;
+                } else if (char === '/') {
+                    time += wordGap - letterGap;
+                }
+            }
+            
+            setTimeout(() => ctx.close(), (time - ctx.currentTime + 1) * 1000);
+        }
+        
+        function playTone(ctx, time, duration) {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.frequency.value = 700;
+            gain.gain.setValueAtTime(0.3, time);
+            gain.gain.exponentialRampToValueAtTime(0.01, time + duration / 1000);
+            osc.start(time);
+            osc.stop(time + duration / 1000);
+        }
+        
+        // Show reference table
+        const ref = document.getElementById('ref');
+        for (const [char, code] of Object.entries(morseCode)) {
+            if (/[A-Z0-9]/.test(char)) {
+                ref.innerHTML += `<div class="ref-item"><span class="ref-char">${char}</span><span class="ref-code">${code}</span></div>`;
+            }
+        }
+        
+        textToMorse();
+    </script>
 </body>
 </html>
